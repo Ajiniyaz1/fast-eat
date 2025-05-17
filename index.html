@@ -51,6 +51,10 @@
             border: 1px solid #d1d5db; /* gray-300 */
             border-radius: 4px;
         }
+         /* Style for selected menu item - Optional highlight */
+        /* .menu-item.selected {
+            border: 2px solid #3b82f6;
+        } */
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 p-4">
@@ -67,24 +71,26 @@
         <div id="menu-items-container">
             </div>
 
-        <div id="order-summary" class="mt-8 p-4 bg-white rounded-lg shadow-md hidden">
-            <h2 class="text-xl font-semibold mb-4">Buyurtma Tafsilotlari</h2>
-            <ul id="cart-items">
+        <div id="order-summary-display" class="mt-8 p-4 bg-white rounded-lg shadow-md hidden">
+            <h2 class="text-xl font-semibold mb-4">Tanlangan Mahsulotlar</h2>
+            <ul id="selected-items-list">
                 </ul>
-            <p class="text-lg font-bold mt-4">Jami: <span id="total-price">0</span> UZS</p>
-
-            <div id="payment-method-section" class="mt-4 pt-4 border-t border-gray-200">
-                <h3 class="text-lg font-semibold mb-3">To'lov Usulini Tanlang:</h3>
-                <div class="flex justify-around">
-                    <button class="payment-button px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg focus:outline-none" data-method="cash">Naxt</button>
-                    <button class="payment-button px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg focus:outline-none" data-method="plastic">Plastik Karta</button>
-                </div>
-                 <p id="selected-payment" class="text-center mt-3 text-sm text-gray-600">Tanlangan: Yo'q</p>
-            </div>
+            <p class="text-lg font-bold mt-4">Jami: <span id="total-price-display">0</span> UZS</p>
         </div>
 
-        <button id="order-button" class="w-full mt-6 px-4 py-3 bg-gray-400 text-white font-bold rounded-lg shadow-lg focus:outline-none cursor-not-allowed" disabled>
-             Savatcha Bo'sh
+
+        <div id="payment-method-section" class="mt-4 p-4 bg-white rounded-lg shadow-md hidden">
+             <h3 class="text-lg font-semibold mb-3">To'lov Usulini Tanlang:</h3>
+             <div class="flex justify-around">
+                 <button class="payment-button px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg focus:outline-none" data-method="cash">Naxt</button>
+                 <button class="payment-button px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg focus:outline-none" data-method="plastic">Plastik Karta</button>
+             </div>
+              <p id="selected-payment" class="text-center mt-3 text-sm text-gray-600">Tanlangan: Yo'q</p>
+         </div>
+
+
+        <button id="order-button" class="w-full mt-6 px-4 py-3 bg-gray-400 text-white font-bold rounded-lg shadow-lg focus:outline-none cursor-not-allowed hidden" disabled>
+             Buyurtmani Botga Yuborish
         </button>
 
     </div>
@@ -105,32 +111,27 @@
         // Sample Menu Data (replace with your actual data)
         const menuData = {
             burgers: [
-                // !!! BU YERDAGI 'image' QISMLARIGA O'ZINGIZNING HAQIQIY RASMLARINGIZ URL MANZILLARINI QO'YING !!!
-                { id: 'burger_beef', name: "Mol Go'shtli Burger", price: 35000, image: "https://placehold.co/300x150/FF5733/FFFFFF?text=Mol+Burger" }, // <-- Mana bu yerga URL
-                { id: 'burger_chicken', name: "Tovuqli Burger", price: 30000, image: "https://placehold.co/300x150/C70039/FFFFFF?text=Tovuq+Burger" }, // <-- Mana bu yerga URL
-                { id: 'burger_cheese', name: "Pishloqli Burger", price: 32000, image: "https://placehold.co/300x150/900C3F/FFFFFF?text=Pishloq+Burger" } // <-- Mana bu yerga URL
-                // O'zingizning boshqa burgerlaringizni qo'shing
+                { id: 'burger_beef', name: "Mol Go'shtli Burger", price: 35000, image: "https://placehold.co/300x150/FF5733/FFFFFF?text=Mol+Burger" },
+                { id: 'burger_chicken', name: "Tovuqli Burger", price: 30000, image: "https://placehold.co/300x150/C70039/FFFFFF?text=Tovuq+Burger" },
+                { id: 'burger_cheese', name: "Pishloqli Burger", price: 32000, image: "https://placehold.co/300x150/900C3F/FFFFFF?text=Pishloq+Burger" }
             ],
             lavash: [
-                 // !!! BU YERDAGI 'image' QISMLARIGA O'ZINGIZNING HAQIQIY RASMLARINGIZ URL MANZILLARINI QO'YING !!!
-                { id: 'lavash_beef', name: "Mol Go'shtli Lavash", price: 28000, image: "https://placehold.co/300x150/581845/FFFFFF?text=Mol+Lavash" }, // <-- Mana bu yerga URL
-                { id: 'lavash_chicken', name: "Tovuqli Lavash", price: 26000, image: "https://placehold.co/300x150/FFC300/000000?text=Tovuq+Lavash" }, // <-- Mana bu yerga URL
-                { id: 'lavash_cheese', name: "Pishloqli Lavash", price: 29000, image: "https://placehold.co/300x150/DAF7A6/000000?text=Pishloq+Lavash" } // <-- Mana bu yerga URL
-                 // O'zingizning boshqa lavashlaringizni qo'shing
+                { id: 'lavash_beef', name: "Mol Go'shtli Lavash", price: 28000, image: "https://placehold.co/300x150/581845/FFFFFF?text=Mol+Lavash" },
+                { id: 'lavash_chicken', name: "Tovuqli Lavash", price: 26000, image: "https://placehold.co/300x150/FFC300/000000?text=Tovuq+Lavash" },
+                { id: 'lavash_cheese', name: "Pishloqli Lavash", price: 29000, image: "https://placehold.co/300x150/DAF7A6/000000?text=Pishloq+Lavash" }
             ],
             pizza: [
-                 // !!! BU YERDAGI 'image' QISMLARIGA O'ZINGIZNING HAQIQIY RASMLARINGIZ URL MANZILLARINI QO'YING !!!
-                 { id: 'pizza_pepperoni', name: "Pepperoni Pizza", price: 55000, image: "https://placehold.co/300x150/FF5733/FFFFFF?text=Pepperoni+Pizza" }, // <-- Mana bu yerga URL
-                 { id: 'pizza_margarita', name: "Margarita Pizza", price: 45000, image: "https://placehold.co/300x150/C70039/FFFFFF?text=Margarita+Pizza" }, // <-- Mana bu yerga URL
-                 { id: 'pizza_chicken', name: "Tovuqli Pizza", price: 50000, image: "https://placehold.co/300x150/900C3F/FFFFFF?text=Tovuq+Pizza" }, // <-- Mana bu yerga URL
-                 { id: 'pizza_mexican', name: "Meksikancha Pizza", price: 58000, image: "https://placehold.co/300x150/581845/FFFFFF?text=Meksikancha+Pizza" } // <-- Mana bu yerga URL
-                 // O'zingizning boshqa pitsalaringizni qo'shing
+                 { id: 'pizza_pepperoni', name: "Pepperoni Pizza", price: 55000, image: "https://placehold.co/300x150/FF5733/FFFFFF?text=Pepperoni+Pizza" },
+                 { id: 'pizza_margarita', name: "Margarita Pizza", price: 45000, image: "https://placehold.co/300x150/C70039/FFFFFF?text=Margarita+Pizza" },
+                 { id: 'pizza_chicken', name: "Tovuqli Pizza", price: 50000, image: "https://placehold.co/300x150/900C3F/FFFFFF?text=Tovuq+Pizza" },
+                 { id: 'pizza_mexican', name: "Meksikancha Pizza", price: 58000, image: "https://placehold.co/300x150/581845/FFFFFF?text=Meksikancha+Pizza" }
             ]
-             // O'zingizning boshqa kategoriyalaringizni qo'shing (masalan, 'ichimliklar', 'desertlar')
         };
 
-        let selectedItems = {}; // Object to store selected items and their quantities {itemId: quantity}
-        let selectedPaymentMethod = null; // To store the selected payment method
+        // Object to store selected items and their quantities {itemId: quantity}
+        let selectedItems = {};
+
+        let selectedPaymentMethod = null;
 
         // Function to render menu items for a given category
         function renderMenuItems(category) {
@@ -142,8 +143,11 @@
 
             items.forEach(item => {
                 const itemElement = document.createElement('div');
-                itemElement.classList.add('bg-white', 'rounded-lg', 'shadow-md', 'p-4', 'mb-4', 'flex', 'items-center', 'cursor-pointer');
+                itemElement.classList.add('menu-item', 'bg-white', 'rounded-lg', 'shadow-md', 'p-4', 'mb-4', 'flex', 'items-center', 'cursor-pointer');
                 itemElement.dataset.itemId = item.id; // Store item ID
+                 itemElement.dataset.itemPrice = item.price; // Store item price
+                 itemElement.dataset.itemName = item.name; // Store item name
+
 
                 itemElement.innerHTML = `
                     <img src="${item.image}" alt="${item.name}" class="menu-item-image w-24 h-24 object-cover rounded-md mr-4">
@@ -202,20 +206,23 @@
 
         // Update the order summary and total price (basic)
         function updateOrderSummary() {
-             const cartItemsList = document.getElementById('cart-items');
-             const totalPriceSpan = document.getElementById('total-price');
-             const orderSummaryDiv = document.getElementById('order-summary');
+             const orderSummaryDisplay = document.getElementById('order-summary-display'); // Get the summary display div
+             const selectedItemsList = document.getElementById('selected-items-list'); // Get the ul for the list
+             const totalPriceDisplay = document.getElementById('total-price-display'); // Get the span for total price
              const paymentMethodSection = document.getElementById('payment-method-section'); // Get payment section
 
-             cartItemsList.innerHTML = '';
+             selectedItemsList.innerHTML = ''; // Clear current summary list
+
              let total = 0;
              let hasItems = false;
 
+             // Calculate total and populate the selected items list
              for (const itemId in selectedItems) {
                  if (selectedItems.hasOwnProperty(itemId)) {
                      const quantity = selectedItems[itemId];
                      if (quantity > 0) {
                          hasItems = true;
+                         // Find the item details from menuData (simple search)
                          let item = null;
                          for (const category in menuData) {
                              const found = menuData[category].find(i => i.id === itemId);
@@ -227,42 +234,42 @@
                          if (item) {
                              const listItem = document.createElement('li');
                              listItem.textContent = `${item.name} x ${quantity} - ${item.price * quantity} UZS`;
-                             cartItemsList.appendChild(listItem);
+                             selectedItemsList.appendChild(listItem);
                              total += item.price * quantity;
                          }
                      }
                  }
-                 // Enable/disable payment method section based on items
-                 paymentMethodSection.classList.toggle('hidden', !hasItems); // Show payment section if items exist
-            }
+             }
 
-            totalPriceSpan.textContent = total;
+             totalPriceDisplay.textContent = total; // Update total price display
 
-            // Show/hide order summary based on whether there are items
-            if (hasItems) {
-                orderSummaryDiv.classList.remove('hidden');
-                 // Update Telegram Main Button
-                 if (selectedPaymentMethod) {
-                      Telegram.WebApp.MainButton.setText(`Buyurtma Berish (${total} UZS) - ${selectedPaymentMethod === 'cash' ? 'Naxt' : 'Plastik'}`).show();
-                      Telegram.WebApp.MainButton.enable(); // Enable if items and payment method selected
-                 } else {
-                      Telegram.WebApp.MainButton.setText(`Buyurtma Berish (${total} UZS) - To'lov usulini tanlang`);
-                      Telegram.WebApp.MainButton.disable(); // Disable if payment method not selected
-                 }
+             // Show/hide order summary display and payment method section based on whether there are items
+             orderSummaryDisplay.classList.toggle('hidden', !hasItems);
+             paymentMethodSection.classList.toggle('hidden', !hasItems);
 
-            } else {
-                 orderSummaryDiv.classList.add('hidden');
+
+             // Update Telegram Main Button
+             if (hasItems) {
+                  Telegram.WebApp.MainButton.show();
+                  if (selectedPaymentMethod) {
+                       Telegram.WebApp.MainButton.setText(`Buyurtma Berish (${total} UZS) - ${selectedPaymentMethod === 'cash' ? 'Naxt' : 'Plastik'}`);
+                       Telegram.WebApp.MainButton.enable(); // Enable if items and payment method selected
+                   } else {
+                       Telegram.WebApp.MainButton.setText(`Buyurtma Berish (${total} UZS) - To'lov usulini tanlang`);
+                       Telegram.WebApp.MainButton.disable(); // Disable if payment method not selected
+                   }
+
+             } else {
                  // Hide Telegram Main Button if no items
                  Telegram.WebApp.MainButton.hide();
                  selectedPaymentMethod = null; // Reset payment method
                  document.getElementById('selected-payment').textContent = "Tanlangan: Yo'q";
                  // Reset payment button styles
                  document.querySelectorAll('.payment-button').forEach(btn => {
-                     btn.classList.remove('bg-blue-500', 'text-white', 'active'); // Also remove 'active'
+                     btn.classList.remove('active', 'bg-blue-500', 'text-white'); // Also remove 'active'
                      btn.classList.add('bg-gray-300', 'text-gray-800');
                  });
-            }
-
+             }
         }
 
 
@@ -307,11 +314,47 @@
              }
 
              // Prepare order data to send back to the bot
+             // Sending details of all selected items
              const orderData = {
-                 items: selectedItems,
-                 total: document.getElementById('total-price').textContent,
-                 payment_method: selectedPaymentMethod
-                 // You might want to add more details here if needed
+                 items: selectedItems, // Send the entire selectedItems object (item ID: quantity)
+                 total: (function() { // Calculate total based on selected items
+                     let total = 0;
+                      for (const itemId in selectedItems) {
+                          if (selectedItems.hasOwnProperty(itemId)) {
+                              const quantity = selectedItems[itemId];
+                              let item = null;
+                              for (const category in menuData) {
+                                  const found = menuData[category].find(i => i.id === itemId);
+                                  if (found) {
+                                      item = found;
+                                      break;
+                                  }
+                              }
+                              if (item) {
+                                  total += item.price * quantity;
+                              }
+                          }
+                      }
+                      return total;
+                 })(), // Immediately invoke the function to get the total
+                 payment_method: selectedPaymentMethod,
+                 // OPTIONAL: Send item details (name, price) for easier processing in bot
+                 item_details: Object.keys(selectedItems).map(itemId => {
+                     let item = null;
+                     for (const category in menuData) {
+                         const found = menuData[category].find(i => i.id === itemId);
+                         if (found) {
+                             item = found;
+                             break;
+                         }
+                     }
+                     return {
+                         id: itemId,
+                         name: item ? item.name : 'Unknown Item',
+                         quantity: selectedItems[itemId],
+                         price: item ? item.price : 0
+                     };
+                 })
              };
 
              // Send data to the Telegram bot
