@@ -22,39 +22,49 @@
             background-color: #3b82f6; /* blue-500 */
             color: white;
         }
-        /* Style for the payment modal background */
+        /* Removed modal backdrop styles as modal is removed */
+        /*
         .modal-backdrop {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000; /* Ensure it's above other content */
+            z-index: 1000;
         }
-        /* Style for the payment modal content */
         .modal-content {
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 90%;
-            max-width: 400px; /* Max width for larger screens */
+            max-width: 400px;
         }
         .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+        */
+         /* Style for selected menu item - Optional highlight */
+        /* .menu-item.selected {
+            border: 2px solid #3b82f6;
+        } */
+
+        /* Styles for the inline plastic payment details section */
+        #plastic-payment-details input {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
             border: 1px solid #d1d5db; /* gray-300 */
             border-radius: 4px;
         }
-         /* Style for selected menu item - Optional highlight */
-        /* .menu-item.selected {
-            border: 2px solid #3b82f6;
-        } */
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 p-4">
@@ -88,24 +98,19 @@
               <p id="selected-payment" class="text-center mt-3 text-sm text-gray-600">Tanlangan: Yo'q</p>
          </div>
 
+         <div id="plastic-payment-details" class="mt-4 p-4 bg-white rounded-lg shadow-md hidden">
+             <h3 class="text-lg font-semibold mb-3">Karta Ma'lumotlarini Kiriting (Simulyatsiya)</h3>
+             <input type="text" id="card-number-inline" placeholder="Karta raqami (16 raqam)" maxlength="16" required>
+             <input type="text" id="card-expiry-inline" placeholder="Amal qilish muddati (MM/YY)" maxlength="5" required>
+             <input type="text" id="cardholder-name-inline" placeholder="Karta egasi ismi" maxlength="50" required>
+         </div>
+
 
         <button id="order-button" class="w-full mt-6 px-4 py-3 bg-gray-400 text-white font-bold rounded-lg shadow-lg focus:outline-none cursor-not-allowed hidden" disabled>
              Buyurtmani Botga Yuborish
         </button>
 
     </div>
-
-    <div id="payment-modal-backdrop" class="modal-backdrop hidden">
-        <div class="modal-content">
-            <h2 class="text-xl font-semibold mb-4">Karta Ma'lumotlarini Kiriting (Simulyatsiya)</h2>
-            <input type="text" id="card-number" placeholder="Karta raqami" required>
-            <input type="text" id="card-expiry" placeholder="Amal qilish muddati (MM/YY)" required>
-            <input type="text" id="card-cvv" placeholder="CVV" required>
-            <button id="simulate-pay-button" class="w-full mt-4 px-4 py-2 bg-green-500 text-white font-bold rounded-lg focus:outline-none">To'lash (Simulyatsiya)</button>
-            <button id="cancel-pay-button" class="w-full mt-2 px-4 py-2 bg-red-500 text-white font-bold rounded-lg focus:outline-none">Bekor qilish</button>
-        </div>
-    </div>
-
 
     <script>
         // Sample Menu Data (replace with your actual data)
@@ -132,6 +137,15 @@
         let selectedItems = {};
 
         let selectedPaymentMethod = null;
+
+        // Get the inline plastic payment details div
+        const plasticPaymentDetailsDiv = document.getElementById('plastic-payment-details');
+        // Get inline input fields - CVV input removed
+        const cardNumberInputInline = document.getElementById('card-number-inline');
+        const cardExpiryInputInline = document.getElementById('card-expiry-inline');
+        // const cardCvvInputInline = document.getElementById('card-cvv-inline'); // CVV input removed
+        const cardholderNameInputInline = document.getElementById('cardholder-name-inline');
+
 
         // Function to render menu items for a given category
         function renderMenuItems(category) {
@@ -247,17 +261,36 @@
              orderSummaryDisplay.classList.toggle('hidden', !hasItems);
              paymentMethodSection.classList.toggle('hidden', !hasItems);
 
+             // Hide plastic payment details if no items or payment method is not plastic
+             if (!hasItems || selectedPaymentMethod !== 'plastic') {
+                 plasticPaymentDetailsDiv.classList.add('hidden');
+             } else {
+                 // If items exist and plastic is selected, plastic details visibility is handled by payment button click
+             }
+
 
              // Update Telegram Main Button
              if (hasItems) {
                   Telegram.WebApp.MainButton.show();
-                  if (selectedPaymentMethod) {
+                  // Check if plastic is selected and required fields are filled (basic check)
+                  const isPlasticAndFilled = selectedPaymentMethod === 'plastic' &&
+                                             cardNumberInputInline.value.length === 16 && // Check for exactly 16 digits
+                                             /^\d{2}\/\d{2}$/.test(cardExpiryInputInline.value) && // Check MM/YY format
+                                             // CVV check removed
+                                             cardholderNameInputInline.value.length > 0; // Check cardholder name
+
+                  if (selectedPaymentMethod === 'cash' || (selectedPaymentMethod === 'plastic' && isPlasticAndFilled)) {
                        Telegram.WebApp.MainButton.setText(`Buyurtma Berish (${total} UZS) - ${selectedPaymentMethod === 'cash' ? 'Naxt' : 'Plastik'}`);
-                       Telegram.WebApp.MainButton.enable(); // Enable if items and payment method selected
-                   } else {
+                       Telegram.WebApp.MainButton.enable(); // Enable if cash or plastic with filled details
+                   } else if (selectedPaymentMethod === 'plastic' && !isPlasticAndFilled) {
+                       Telegram.WebApp.MainButton.setText(`Buyurtma Berish (${total} UZS) - Karta ma'lumotlarini kiriting`);
+                       Telegram.WebApp.MainButton.disable(); // Disable if plastic and details not filled
+                   }
+                   else { // Case where items exist but no payment method is selected
                        Telegram.WebApp.MainButton.setText(`Buyurtma Berish (${total} UZS) - To'lov usulini tanlang`);
                        Telegram.WebApp.MainButton.disable(); // Disable if payment method not selected
                    }
+
 
              } else {
                  // Hide Telegram Main Button if no items
@@ -269,6 +302,7 @@
                      btn.classList.remove('active', 'bg-blue-500', 'text-white'); // Also remove 'active'
                      btn.classList.add('bg-gray-300', 'text-gray-800');
                  });
+                  plasticPaymentDetailsDiv.classList.add('hidden'); // Hide plastic details
              }
         }
 
@@ -287,6 +321,12 @@
                 event.target.classList.add('active', 'bg-blue-500', 'text-white');
                  event.target.classList.remove('bg-gray-300', 'text-gray-800');
 
+                // Show/hide plastic payment details based on selection
+                if (selectedPaymentMethod === 'plastic') {
+                    plasticPaymentDetailsDiv.classList.remove('hidden');
+                } else {
+                    plasticPaymentDetailsDiv.classList.add('hidden');
+                }
 
                 updateOrderSummary(); // Update main button text/state
             });
@@ -312,6 +352,20 @@
                  alert("Iltimos, avval mahsulot tanlang va to'lov usulini tanlang.");
                  return;
              }
+
+             // Basic validation for plastic payment details if selected - CVV check removed
+             if (selectedPaymentMethod === 'plastic') {
+                 if (cardNumberInputInline.value.length !== 16 || // Check for exactly 16 digits
+                     !/^\d{2}\/\d{2}$/.test(cardExpiryInputInline.value) || // Check MM/YY format
+                     cardholderNameInputInline.value.length === 0) // Check cardholder name
+                 {
+                     alert("Iltimos, karta ma'lumotlarini to'liq va to'g'ri kiriting.");
+                     return; // Stop the process if details are missing or invalid
+                 }
+                 // Simulate payment success message for plastic
+                 alert("To'lov muvaffaqiyatli amalga oshirildi! (Simulyatsiya)");
+             }
+
 
              // Prepare order data to send back to the bot
              // Sending details of all selected items
@@ -355,6 +409,7 @@
                          price: item ? item.price : 0
                      };
                  })
+                 // Note: Card details are NOT sent to the bot for security (this is a simulation)
              };
 
              // Send data to the Telegram bot
@@ -369,42 +424,19 @@
 
         // Function triggered by Telegram Main Button click
         function onMainButtonClick() {
-             if (selectedPaymentMethod === 'cash') {
-                 // If cash, send order directly
-                 sendOrderToBot();
-             } else if (selectedPaymentMethod === 'plastic') {
-                 // If plastic, show the simulation modal
-                 paymentModalBackdrop.classList.remove('hidden');
-                  // Optional: Clear previous input values
-                 cardNumberInput.value = '';
-                 cardExpiryInput.value = '';
-                 cardCvvInput.value = '';
-             } else {
-                 // Should not happen if MainButton is disabled when no method is selected
-                 alert("Iltimos, to'lov usulini tanlang.");
-             }
+             // Now, regardless of payment method, we call sendOrderToBot().
+             // sendOrderToBot() function now handles the plastic details validation and simulation alert.
+             sendOrderToBot();
         }
 
-        // Handle click on "To'lash (Simulyatsiya)" button inside the modal
-        simulatePayButton.addEventListener('click', () => {
-             // --- Simulate Payment Success ---
-             // In a real app, you'd send data to a payment gateway here
-
-             // Simulate success message (optional)
-             alert("To'lov muvaffaqiyatli amalga oshirildi! (Simulyatsiya)");
-
-             // Hide the modal
-             paymentModalBackdrop.classList.add('hidden');
-
-             // Send the order data to the bot AFTER simulating payment
-             sendOrderToBot();
-        });
-
-        // Handle click on "Bekor qilish" button inside the modal
-        cancelPayButton.addEventListener('click', () => {
-             // Hide the modal without sending order
-             paymentModalBackdrop.classList.add('hidden');
-        });
+        // Function to format expiry date input as MM/YY
+        function formatExpiryDate(input) {
+            let value = input.value.replace(/\D/g, ''); // Remove non-digits
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4); // Insert '/' after 2 digits
+            }
+            input.value = value;
+        }
 
 
         // Initialize the WebApp
@@ -452,6 +484,15 @@
             // Activate the first tab button visually
             document.querySelector('.tab-button[data-category="burgers"]').classList.add('active');
             updateOrderSummary(); // Initialize order summary display and button state
+
+            // Add event listeners to inline plastic payment inputs to update button state and format expiry
+            cardNumberInputInline.addEventListener('input', updateOrderSummary);
+            cardExpiryInputInline.addEventListener('input', () => {
+                formatExpiryDate(cardExpiryInputInline); // Format the input
+                updateOrderSummary(); // Then update summary/button
+            });
+            // cardCvvInputInline.addEventListener('input', updateOrderSummary); // CVV event listener removed
+            cardholderNameInputInline.addEventListener('input', updateOrderSummary);
         };
 
         // Ensure updateOrderSummary is called whenever selectedItems or selectedPaymentMethod changes
